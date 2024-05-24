@@ -1,0 +1,92 @@
+#!/bin/bash
+#
+# Copyright 2023 NVIDIA CORPORATION
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Usage: sbatch scripts/multi_node_training.sub
+
+#SBATCH --job-name mlperf-hpc:openfold-reference
+#SBATCH --time 02:15:00
+#SBATCH --nodes 16
+#SBATCH --ntasks-per-node 4
+#SBATCH --output logs/slurm-%j.out
+
+# Print current datetime:
+echo "START" $(date +"%Y-%m-%d %H:%M:%S")
+
+# Print node list:
+echo "SLURM_JOB_ID=$SLURM_JOB_ID"
+echo "SLURM_JOB_NUM_NODES=$SLURM_JOB_NUM_NODES"
+echo "SLURM_NODELIST=$SLURM_NODELIST"
+
+# Note: the following srun commands assume that pyxis plugin is installed on a SLURM cluster.
+# https://github.com/NVIDIA/pyxis
+
+# Download container and give it a name:
+srun \
+--environment="$(realpath env/ngc-openfold-24.03.toml)" \
+bash -c 'echo "srun SLURM_JOB_ID=$SLURM_JOB_ID SLURMD_NODENAME=$SLURMD_NODENAME"'
+
+export BASE_DATA_DIR="/mchstor2/scratch/cscs/lukasd/mlperf/data/openfold/pdb_data"
+export TRAINING_RUN_DIR="$(pwd)"
+
+
+# Print current datetime again:
+echo "READY" $(date +"%Y-%m-%d %H:%M:%S")
+
+# Set number of threads to use for parallel regions:
+export OMP_NUM_THREADS=1
+
+# Set MLPerf variables:
+export DATESTAMP=$(date +"%y%m%d%H%M%S%N")
+export EXP_ID=1
+
+export MASTER_ADDR=$(hostname)
+export MASTER_PORT=29500
+
+# Debugging (single rank, controlled by DEBUG_RANK, defaults to rank 0)
+if [ "${ENABLE_DEBUGGING:-0}" -eq 1 ]; then
+    ENROOT_ENTRYPOINT="env/enroot-entrypoint.sh"
+else
+    ENROOT_ENTRYPOINT=""
+fi
+
+# Run the command:
+srun \
+--environment="$(realpath env/ngc-openfold-24.03.toml)" ${ENROOT_ENTRYPOINT} \
+bash -c \
+"
+echo \"srun SLURMD_NODENAME=\$SLURMD_NODENAME MASTER_ADDR=\$MASTER_ADDR MASTER_PORT=\$MASTER_PORT\";
+CUDA_VISIBLE_DEVICES=\$SLURM_LOCALID \
+RANK=\$SLURM_PROCID \
+WORLD_SIZE=\$SLURM_NTASKS \
+LOCAL_RANK=\$SLURM_LOCALID \
+LOCAL_WORLD_SIZE=\$SLURM_NTASKS_PER_NODE \
+python -u train.py \
+--training_dirpath ${TRAINING_RUN_DIR} \
+--pdb_mmcif_chains_filepath ${BASE_DATA_DIR}/pdb_mmcif/processed/chains.csv \
+--pdb_mmcif_dicts_dirpath ${BASE_DATA_DIR}/pdb_mmcif/processed/dicts \
+--pdb_obsolete_filepath ${BASE_DATA_DIR}/pdb_mmcif/processed/obsolete.dat \
+--pdb_alignments_dirpath ${BASE_DATA_DIR}/open_protein_set/processed/pdb_alignments \
+--initialize_parameters_from ${BASE_DATA_DIR}/mlperf_hpc_openfold_resumable_checkpoint.pt \
+--seed 1234567890 \
+--num_train_iters 2000 \
+--val_every_iters 40 \
+--local_batch_size 1 \
+--base_lr 1e-3 \
+--warmup_lr_init 1e-5 \
+--warmup_lr_iters 0 \
+--num_train_dataloader_workers 14 \
+--num_val_dataloader_workers 2 \
+--distributed"

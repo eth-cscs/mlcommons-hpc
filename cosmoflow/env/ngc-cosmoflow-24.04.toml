@@ -1,0 +1,21 @@
+image = "/bret/scratch/cscs/lukasd/images/ngc-cosmoflow+24.04.sqsh"
+
+mounts = [
+  "/bret:/bret",
+  "/mchstor2:/mchstor2",
+  "/etc/slurm:/etc/slurm",
+  "/users/lukasd/.ssh/cscs-key.pub:/users/lukasd/.ssh/authorized_keys",
+  "/users/lukasd/.vscode-server:/users/lukasd/.vscode-server",
+  "/users/lukasd/.wget-hsts:/users/lukasd/.wget-hsts"
+]
+
+writable = true
+
+workdir = "/bret/scratch/cscs/lukasd/llm/hpc/cosmoflow"
+
+[annotations]
+com.hooks.aws_ofi_nccl.enabled = "true"
+com.hooks.aws_ofi_nccl.variant = "cuda12"
+
+[env]
+NCCL_DEBUG = "INFO"

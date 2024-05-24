@@ -72,7 +72,7 @@ class BaseTrainer(ABC):
         self.step = 0
 
         if torch.cuda.is_available() and not self.cpu:
-            self.device = torch.device(f"cuda:{local_rank}")
+            self.device = torch.device(f"cuda:{local_rank % torch.cuda.device_count()}")
         else:
             self.device = torch.device("cpu")
             self.cpu = True  # handle case when `--cpu` isn't specified

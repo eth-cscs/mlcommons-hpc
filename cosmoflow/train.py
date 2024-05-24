@@ -36,13 +36,25 @@ import logging
 import pickle
 from types import SimpleNamespace
 
+import os
+if os.environ.get("ENABLE_DEBUGGING", False):
+    if os.environ.get("DEBUG_RANK", '0') == os.environ.get("SLURM_PROCID"):
+        import debugpy
+        debugpy.listen(5678)
+        print("Waiting for debugger attach")
+        debugpy.wait_for_client()
+        debugpy.breakpoint()
+    else:
+        import time
+        time.sleep(1200)
+
 # External imports
 import yaml
 import pandas as pd
 import tensorflow as tf
 # Suppress TF warnings
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-tf.compat.v1.logging.set_verbosity(logging.ERROR)
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
+tf.compat.v1.logging.set_verbosity(logging.DEBUG)
 import horovod.tensorflow.keras as hvd
 import wandb
 
@@ -71,7 +83,7 @@ def parse_args():
     """Parse command line arguments"""
     parser = argparse.ArgumentParser('train.py')
     add_arg = parser.add_argument
-    add_arg('config', nargs='?', default='configs/cosmo.yaml')
+    add_arg('config', nargs='?', default='configs/cosmo_alps.yaml')
     add_arg('--output-dir', help='Override output directory')
     add_arg('--run-tag', help='Unique run tag for logging')
 

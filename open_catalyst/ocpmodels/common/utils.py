@@ -21,7 +21,7 @@ from bisect import bisect
 from itertools import product
 from pathlib import Path
 
-import demjson
+import demjson3
 import numpy as np
 import torch
 import yaml
@@ -474,7 +474,7 @@ def get_pbc_distances(
     distances = distance_vectors.norm(dim=-1)
 
     # redundancy: remove zero distances
-    nonzero_idx = torch.arange(len(distances))[distances != 0]
+    nonzero_idx = torch.arange(len(distances), device=row.device)[distances != 0]
     edge_index = edge_index[:, nonzero_idx]
     distances = distances[nonzero_idx]
 

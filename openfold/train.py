@@ -397,7 +397,7 @@ def training(args: argparse.Namespace) -> None:
         main_rank = 0
         is_main_process = bool(rank == main_rank)
         process_name = f"dist_process_rank{rank}"
-        device = torch.device(f"cuda:{local_rank}")
+        device = torch.device(f"cuda:{local_rank % torch.cuda.device_count()}")
         global_batch_size = args.local_batch_size * world_size
         if is_main_process:
             print(f"initialized distributed training: WORLD_SIZE={world_size}")
