@@ -256,8 +256,12 @@ def main():
         mllogger.start(key=mllog.constants.SEED, value=args.seed)
         # Scale logging for mlperf hpc metrics
         mllogger.event(key='number_of_ranks', value=dist.size)
-        mllogger.event(key='number_of_nodes', value=(dist.size//dist.local_size))
-        mllogger.event(key='accelerators_per_node', value=dist.local_size)
+        if 'SLURM_NTASKS_PER_NODE' in os.environ:
+            mllogger.event(key='number_of_nodes', value=(dist.size//int(os.environ['SLURM_NTASKS_PER_NODE'])))
+            mllogger.event(key='accelerators_per_node', value=int(os.environ['SLURM_NTASKS_PER_NODE']))
+        else:
+            mllogger.event(key='number_of_nodes', value=(dist.size//dist.local_size))
+            mllogger.event(key='accelerators_per_node', value=dist.local_size)
 
     # Initialize Weights & Biases logging
     if args.wandb and dist.rank == 0:

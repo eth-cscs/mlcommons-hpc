@@ -396,6 +396,11 @@ class MLPerfForcesTrainer(BaseTrainer):
             # Weak-scaling HPC metrics
             accelerators_per_node = self.config["task"]["mlperf_accelerators_per_node"]
             accelerators_per_rank = self.config["task"]["mlperf_accelerators_per_rank"]
+            if 'SLURM_NTASKS_PER_NODE' in os.environ:
+                if int(os.environ['SLURM_NTASKS_PER_NODE']) != accelerators_per_node//accelerators_per_rank:
+                    raise ValueError(
+                        f"SLURM_NTASKS_PER_NODE ({os.environ['SLURM_NTASKS_PER_NODE']}) does not match config: "
+                        f"mlperf_accelerators_per_node/rank = {accelerators_per_node}/{accelerators_per_rank}")
             num_ranks = distutils.get_world_size()
             num_nodes = (num_ranks * accelerators_per_rank) // accelerators_per_node
             mllogger.event(key='number_of_ranks', value=num_ranks)

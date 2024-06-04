@@ -16,7 +16,7 @@
 #
 # Usage: sbatch scripts/multi_node_training.sub
 
-#SBATCH --job-name mlperf-hpc:openfold-reference
+#SBATCH --job-name mlperf-openfold
 #SBATCH --time 02:15:00
 #SBATCH --nodes 16
 #SBATCH --ntasks-per-node 4
@@ -63,17 +63,17 @@ else
 fi
 
 # Run the command:
-srun \
+srun -ul \
 --environment="$(realpath env/ngc-openfold-24.03.toml)" ${ENROOT_ENTRYPOINT} \
 bash -c \
 "
-echo \"srun SLURMD_NODENAME=\$SLURMD_NODENAME MASTER_ADDR=\$MASTER_ADDR MASTER_PORT=\$MASTER_PORT\";
+hostname
 CUDA_VISIBLE_DEVICES=\$SLURM_LOCALID \
 RANK=\$SLURM_PROCID \
 WORLD_SIZE=\$SLURM_NTASKS \
 LOCAL_RANK=\$SLURM_LOCALID \
 LOCAL_WORLD_SIZE=\$SLURM_NTASKS_PER_NODE \
-python -u train.py \
+python train.py \
 --training_dirpath ${TRAINING_RUN_DIR} \
 --pdb_mmcif_chains_filepath ${BASE_DATA_DIR}/pdb_mmcif/processed/chains.csv \
 --pdb_mmcif_dicts_dirpath ${BASE_DATA_DIR}/pdb_mmcif/processed/dicts \

@@ -4,7 +4,7 @@
 #SBATCH --nodes 4
 #SBATCH --ntasks-per-node 4
 #SBATCH -t 4:00:00
-#SBATCH -o logs/%x-%j.out
+#SBATCH -o logs/slurm-%x-%j.out
 
 #export HOROVOD_TIMELINE=./timeline.json
 
@@ -20,6 +20,7 @@ fi
 
 set -x
 srun -l -u --mpi=pmi2 --environment="$(realpath env/ngc-cosmoflow-24.04.toml)" ${ENROOT_ENTRYPOINT} bash -c " \
-       CUDA_VISIBLE_DEVICES=\$SLURM_LOCALID \
-       python train.py -d --rank-gpu $@
+    hostname
+    CUDA_VISIBLE_DEVICES=\$SLURM_LOCALID \
+    python train.py --mlperf -d --rank-gpu $@
 "

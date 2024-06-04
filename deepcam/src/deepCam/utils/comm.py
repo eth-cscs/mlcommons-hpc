@@ -67,7 +67,9 @@ def get_local_size():
     """ 
     if not (dist.is_available() and dist.is_initialized()):
         return 1
-    if torch.cuda.is_available():
+    if 'SLURM_NTASKS_PER_NODE' in os.environ:
+        local_size = os.environ['SLURM_NTASKS_PER_NODE']
+    elif torch.cuda.is_available():
         local_size = torch.cuda.device_count()
     else:
         local_size = 1

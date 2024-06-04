@@ -26,6 +26,7 @@ fi
 
 set -x
 srun -l -u --environment="$(realpath env/ngc-open_catalyst-24.03.toml)" ${ENROOT_ENTRYPOINT} bash -c "
+    hostname
     CUDA_VISIBLE_DEVICES=\$SLURM_LOCALID \
     scripts/run_training.sh \
     --config-yml $OCP_CONFIG \

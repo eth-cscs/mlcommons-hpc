@@ -22,7 +22,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #SBATCH --job-name=mlperf-deepcam
-#SBATCH --time=00:30:00
+#SBATCH --time=03:30:00
 #SBATCH --nodes=128
 #SBATCH --ntasks-per-node=4
 #SBATCH --output logs/slurm-%j.out
@@ -90,7 +90,8 @@ else
     ENROOT_ENTRYPOINT=""
 fi
 
-srun -ul --environment="$(realpath ../env/ngc-deepcam-24.03.toml)" ${ENROOT_ENTRYPOINT} bash -c " \
+srun -ul --environment="$(realpath env/ngc-deepcam-24.03.toml)" ${ENROOT_ENTRYPOINT} bash -c " \
+       hostname
        CUDA_VISIBLE_DEVICES=\$SLURM_LOCALID \
        python ./train.py \
        --wireup_method \"nccl-slurm\" \

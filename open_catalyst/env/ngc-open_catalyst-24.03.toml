@@ -13,16 +13,9 @@ writable = true
 
 workdir = "/bret/scratch/cscs/lukasd/llm/hpc/open_catalyst"
 
-#[env]
-#TORCH_CPP_LOG_LEVEL = "INFO"
-#TORCH_DISTRIBUTED_DEBUG = "DETAIL"
-#NCCL_DEBUG = "DEBUG"
-#NCCL_ASYNC_ERROR_HANDLING = "1"
-
 [annotations]
 com.hooks.aws_ofi_nccl.enabled = "true"
 com.hooks.aws_ofi_nccl.variant = "cuda12"
 
 [env]
-#NVIDIA_DISABLE_REQUIRE = "1"
 NCCL_DEBUG = "INFO"
