@@ -5,6 +5,6 @@ set -euo pipefail
 set -x
 cd $(dirname $0)
 
-podman build --ulimit nofile=$(ulimit -n):$(ulimit -n) -t lukasgd/ngc-openfold:24.03 .
-enroot import -x mount -o /bret/scratch/cscs/lukasd/images/ngc-openfold+24.03.sqsh podman://lukasgd/ngc-openfold:24.03
+#podman build  -t ahernnde/ngc-openfold:24.03 .
+enroot import -x mount -o /capstor/scratch/cscs/ahernnde/container-image/openfold/ngc-openfold-24.03.sqsh podman://ahernnde/ngc-openfold:24.03
 set +x
