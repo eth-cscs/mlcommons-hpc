@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=openfold
-#SBATCH --nodes=256
+#SBATCH --nodes=64
 #SBATCH --ntasks-per-node=4
 #SBATCH --gpus-per-task=1
 #SBATCH --time=8:00:00
@@ -39,7 +39,7 @@ export TRAIN_ARGS="\
 	--log_every_iters 4 \
 	"
 
-srun -ul --environment=openfold bash -c "
+srun -ul --cpu-bind=verbose,rank_ldom --environment=openfold bash -c "
 	export LOCAL_RANK=\$SLURM_PROCID
-	python train.py $TRAIN_ARGS
+	/capstor/scratch/cscs/boeschf/images/launch_wrapper python train.py $TRAIN_ARGS
 "
