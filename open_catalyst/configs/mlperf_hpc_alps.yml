@@ -1,13 +1,13 @@
 trainer: mlperf_forces
 
 dataset:
-    - src: /mchstor2/scratch/cscs/lukasd/mlperf/data/open_catalyst/oc20_data/s2ef/2M/train
+    - src: /capstor/scratch/cscs/dealmeih/ds/mlperf/data/open_catalyst/oc20_data/s2ef/2M/train
       normalize_labels: True
       target_mean: -0.7554450631141663
       target_std: 2.887317180633545
       grad_target_mean: 0.0
       grad_target_std: 2.887317180633545
-    - src: /mchstor2/scratch/cscs/lukasd/mlperf/data/open_catalyst/oc20_data/s2ef/all/val_id
+    - src: /capstor/scratch/cscs/dealmeih/ds/mlperf/data/open_catalyst/oc20_data/s2ef/all/val_id
 
 # logger: wandb
 

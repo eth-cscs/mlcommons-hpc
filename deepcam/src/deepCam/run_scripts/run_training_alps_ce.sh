@@ -25,15 +25,16 @@
 #SBATCH --time=03:30:00
 #SBATCH --nodes=128
 #SBATCH --ntasks-per-node=4
-#SBATCH --output logs/slurm-%j.out
+#SBATCH --gpus-per-task=1
+#SBATCH --output logs/slurm-%x-%j.out
 
 set -euo pipefail
 
 mkdir -p logs
 
 # parameters (can be overriden through environment)
-data_dir=${data_dir:-"/mchstor2/scratch/cscs/aurianer/mlperf/data/deepcam/All-Hist/"}
-# data_dir="/mchstor2/scratch/cscs/aurianer/mlperf/data/deepcam/deepcam-data-mini/"
+data_dir=${data_dir:-"/capstor/scratch/cscs/dealmeih/ds/mlperf/data/deepcam/All-Hist/"}
+# data_dir="/capstor/scratch/cscs/dealmeih/ds/mlperf/data/deepcam/deepcam-data-mini/"
 output_dir=${output_dir:-"./runs/"}
 local_batch_size=${local_batch_size:-2}
 global_batch_size=$(( $local_batch_size * $SLURM_NTASKS ))
@@ -90,9 +91,9 @@ else
     ENROOT_ENTRYPOINT=""
 fi
 
-srun -ul --environment="$(realpath env/ngc-deepcam-24.03.toml)" ${ENROOT_ENTRYPOINT} bash -c " \
+srun -ul --container-workdir=$(pwd) --environment="$(realpath env/ngc-deepcam-24.03.toml)" ${ENROOT_ENTRYPOINT} bash -c " \
        hostname
-       CUDA_VISIBLE_DEVICES=\$SLURM_LOCALID \
+       cd src/deepCam
        python ./train.py \
        --wireup_method \"nccl-slurm\" \
        --run_tag ${run_tag} \

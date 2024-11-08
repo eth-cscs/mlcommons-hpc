@@ -8,7 +8,7 @@ mlperf:
 
 data:
     name: cosmo
-    data_dir: /mchstor2/scratch/cscs/lukasd/mlperf/data/cosmoflow/cosmoUniverse_2019_05_4parE_tf_v2_mini
+    data_dir: /capstor/scratch/cscs/dealmeih/ds/mlperf/data/cosmoflow/cosmoUniverse_2019_05_4parE_tf_v2_mini
     compression: GZIP
     n_train: 1024
     n_valid: 1024

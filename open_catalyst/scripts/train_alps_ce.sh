@@ -3,6 +3,7 @@
 #SBATCH --job-name mlperf-ocp
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=4
+#SBATCH --gpus-per-task=1
 #SBATCH --time 4:00:00
 #SBATCH --output logs/slurm-%x-%j.out
 
@@ -25,9 +26,8 @@ else
 fi
 
 set -x
-srun -l -u --environment="$(realpath env/ngc-open_catalyst-24.03.toml)" ${ENROOT_ENTRYPOINT} bash -c "
+srun -l -u --container-workdir=$(pwd) --environment="$(realpath env/ngc-open_catalyst-24.03.toml)" ${ENROOT_ENTRYPOINT} bash -c "
     hostname
-    CUDA_VISIBLE_DEVICES=\$SLURM_LOCALID \
     scripts/run_training.sh \
     --config-yml $OCP_CONFIG \
     --seed $seed \

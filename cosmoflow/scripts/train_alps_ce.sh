@@ -3,6 +3,7 @@
 #SBATCH -J mlperf-cosmoflow
 #SBATCH --nodes 4
 #SBATCH --ntasks-per-node 4
+#SBATCH --gpus-per-task 1
 #SBATCH -t 4:00:00
 #SBATCH -o logs/slurm-%x-%j.out
 
@@ -19,8 +20,7 @@ else
 fi
 
 set -x
-srun -l -u --mpi=pmi2 --environment="$(realpath env/ngc-cosmoflow-24.04.toml)" ${ENROOT_ENTRYPOINT} bash -c " \
+srun -l -u --mpi=pmi2 --container-workdir=$(pwd) --environment="$(realpath env/ngc-cosmoflow-24.04.toml)" ${ENROOT_ENTRYPOINT} bash -c " \
     hostname
-    CUDA_VISIBLE_DEVICES=\$SLURM_LOCALID \
     python train.py --mlperf -d --rank-gpu $@
 "
