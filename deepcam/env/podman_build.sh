@@ -2,9 +2,14 @@
 
 set -euo pipefail
 
-set -x
 cd $(dirname $0)
 
-podman build --ulimit nofile=$(ulimit -n):$(ulimit -n) -t lukasgd/ngc-deepcam:24.03 .
-enroot import -x mount -o /capstor/scratch/cscs/lukasd/images/ngc-deepcam+24.03.sqsh podman://lukasgd/ngc-deepcam:24.03
+source ../../utils/podman_build.sh
+
+set -x
+
+podman_prepare_build_context .
+podman build -t $USER/ngc-deepcam:24.03 .
+enroot import -x mount -o $SCRATCH/images/ngc-deepcam+24.03.sqsh podman://$USER/ngc-deepcam:24.03
+
 set +x

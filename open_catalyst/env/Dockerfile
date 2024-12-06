@@ -16,3 +16,7 @@ RUN pip install --no-cache-dir git+https://github.com/mlcommons/logging.git
 
 # Other packages
 RUN pip install --no-cache-dir ray submitit demjson3 wandb ase pymatgen lmdb==1.1.1
+
+# Test to avoid race condition for different ranks executing entrypoint resulting in different LD_LIBRARY_PATHs
+# if CUDA driver in container newer than on host (incompatible user-space CUDA libs being loaded/runtime NCCL test errors)
+COPY nvidia_entrypoint_fix_tmp.sh /opt/nvidia/entrypoint.d/99-gpu-compat-library-path-fix.sh

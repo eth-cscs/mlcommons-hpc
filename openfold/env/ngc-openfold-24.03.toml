@@ -2,7 +2,18 @@ image = "/capstor/scratch/cscs/lukasd/images/ngc-openfold+24.03.sqsh"
 
 mounts = [
   "/capstor/scratch/cscs",
-  "/capstor/scratch/cscs/dealmeih/nccl_plugin_todi/1.6.0-hcopy/libnccl-net.so:/usr/lib/libnccl-net-ofi.so",
+  "/iopsstor/scratch/cscs",
+  # 1.6.0-hcopy plugin
+  #"/capstor/scratch/cscs/dealmeih/nccl_plugin_todi/1.6.0-hcopy/libnccl-net.so:/usr/lib/libnccl-net-ofi.so",
+  # 1.6.0 plugin
+  #"/capstor/scratch/cscs/dealmeih/nccl_plugin_todi/1.6.0/libnccl-net.so:/usr/lib/libnccl-net-ofi.so",
+  # 1.9.2 and 1.13.1 plugin
+  #"/capstor/scratch/cscs/dealmeih/nccl_plugin_todi/1.9.2-aws/libnccl-net.so:/usr/lib/libnccl-net-ofi.so",
+  "/capstor/scratch/cscs/manitart/nccl_plugin_todi/1.9.2-aws-ubuntu20.04/libnccl-net.so:/usr/lib/libnccl-net-ofi.so",
+  #"/capstor/scratch/cscs/manitart/nccl_plugin_todi/1.13.1-aws-ubuntu20.04/libnccl-net.so:/usr/lib/libnccl-net-ofi.so",
+  "/usr/lib64/libhwloc.so.15:/usr/lib/libhwloc.so.15",
+  "/usr/lib64/libpciaccess.so.0:/usr/lib/libpciaccess.so.0",
+  "/usr/lib64/libxml2.so.2:/usr/lib/libxml2.so.2",
   "/etc/slurm:/etc/slurm",
   #"/users/$USER/.ssh/cscs-key.pub:/users/$USER/.ssh/authorized_keys",
   #"/users/$USER/.vscode-server",
@@ -40,6 +51,8 @@ FI_MR_CACHE_MONITOR = "userfaultfd"
 FI_CXI_DEFAULT_CQ_SIZE = "131072"
 FI_CXI_DEFAULT_TX_SIZE = "32768"
 FI_CXI_RX_MATCH_MODE = "software"
+FI_CXI_SAFE_DEVMEM_COPY_THRESHOLD = "16777216"
+FI_CXI_COMPAT = "0"
 
 MPICH_NO_BUFFER_ALIAS_CHECK = "1"
 MPICH_OFI_NIC_POLICY = "NUMA"

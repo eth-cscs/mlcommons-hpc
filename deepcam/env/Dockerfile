@@ -30,7 +30,7 @@ RUN mkdir -p /run/sshd
 RUN pip install h5py
 
 #install mpi4py
-RUN pip install mpi4py
+RUN pip install mpi4py==3.1.6
 
 #install warmup-scheduler
 RUN pip install "git+https://github.com/ildoonet/pytorch-gradual-warmup-lr.git@6b5e8953a80aef5b324104dc0c2e9b8c34d622bd"
@@ -44,3 +44,7 @@ RUN pip install "git+https://github.com/mlperf/logging.git@501bbde47f005d67c6357
 
 # #create additional folders for mapping data in
 # RUN mkdir -p /data
+
+# Test to avoid race condition for different ranks executing entrypoint resulting in different LD_LIBRARY_PATHs
+# if CUDA driver in container newer than on host (incompatible user-space CUDA libs being loaded/runtime NCCL test errors)
+COPY nvidia_entrypoint_fix_tmp.sh /opt/nvidia/entrypoint.d/99-gpu-compat-library-path-fix.sh

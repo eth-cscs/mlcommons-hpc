@@ -23,6 +23,13 @@
 #SBATCH --gpus-per-task 1
 #SBATCH --output logs/slurm-%x-%j.out
 
+set -euo pipefail
+
+source $SLURM_SUBMIT_DIR/../utils/all_ce.sh
+
+mlc_utils_set_enroot_library_path
+mlc_utils_set_enroot_extra_entrypoint
+
 # Print current datetime:
 echo "START" $(date +"%Y-%m-%d %H:%M:%S")
 
@@ -39,7 +46,7 @@ srun \
 --container-workdir=$(pwd) --environment="$(realpath env/ngc-openfold-24.03.toml)" \
 bash -c 'echo "srun SLURM_JOB_ID=$SLURM_JOB_ID SLURMD_NODENAME=$SLURMD_NODENAME"'
 
-export BASE_DATA_DIR="/capstor/scratch/cscs/dealmeih/ds/mlperf/data/openfold/pdb_data"
+export BASE_DATA_DIR="/iopsstor/scratch/cscs/dealmeih/ds/mlperf/data/openfold/pdb_data"
 export TRAINING_RUN_DIR="$(pwd)"
 
 
@@ -56,16 +63,16 @@ export EXP_ID=1
 export MASTER_ADDR=$(hostname)
 export MASTER_PORT=29500
 
-# Debugging (single rank, controlled by DEBUG_RANK, defaults to rank 0)
-if [ "${ENABLE_DEBUGGING:-0}" -eq 1 ]; then
-    ENROOT_ENTRYPOINT="env/enroot-entrypoint.sh"
-else
-    ENROOT_ENTRYPOINT=""
-fi
+
+mlc_utils_srun_disp_gpu_mem
+trap mlc_utils_sbatch_disp_gpu_mem TERM EXIT KILL
+mlc_utils_srun_dmesg_bg
 
 # Run the command:
+set -x
 srun -ul \
---container-workdir=$(pwd) --environment="$(realpath env/ngc-openfold-24.03.toml)" ${ENROOT_ENTRYPOINT} \
+--container-workdir=$(pwd) --environment="$(realpath env/ngc-openfold-24.03.toml)" \
+${SRUN_EXTRA_ARGS:-} ${ENROOT_EXTRA_ENTRYPOINT:-} \
 bash -c \
 "
 hostname
@@ -90,3 +97,7 @@ python train.py \
 --num_train_dataloader_workers 14 \
 --num_val_dataloader_workers 2 \
 --distributed"
+
+set +x
+mlc_utils_srun_disp_gpu_mem
+mlc_utils_kill_dmesg_bg

@@ -50,3 +50,7 @@ RUN wget -q -P /workspace/downloads https://github.com/TimoLassmann/kalign/archi
 
 # # Install OpenFold source code package in editable mode:
 # RUN pip install -e .
+
+# Test to avoid race condition for different ranks executing entrypoint resulting in different LD_LIBRARY_PATHs
+# if CUDA driver in container newer than on host (incompatible user-space CUDA libs being loaded/runtime NCCL test errors)
+COPY nvidia_entrypoint_fix_tmp.sh /opt/nvidia/entrypoint.d/99-gpu-compat-library-path-fix.sh

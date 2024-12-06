@@ -30,11 +30,16 @@
 
 set -euo pipefail
 
+source $SLURM_SUBMIT_DIR/../utils/all_ce.sh
+
+mlc_utils_set_enroot_library_path
+mlc_utils_set_enroot_extra_entrypoint
+
 mkdir -p logs
 
 # parameters (can be overriden through environment)
-data_dir=${data_dir:-"/capstor/scratch/cscs/dealmeih/ds/mlperf/data/deepcam/All-Hist/"}
-# data_dir="/capstor/scratch/cscs/dealmeih/ds/mlperf/data/deepcam/deepcam-data-mini/"
+data_dir=${data_dir:-"/iopsstor/scratch/cscs/dealmeih/ds/mlperf/data/deepcam/All-Hist/"}
+# data_dir="/iopsstor/scratch/cscs/dealmeih/ds/mlperf/data/deepcam/deepcam-data-mini/"
 output_dir=${output_dir:-"./runs/"}
 local_batch_size=${local_batch_size:-2}
 global_batch_size=$(( $local_batch_size * $SLURM_NTASKS ))
@@ -83,15 +88,13 @@ esac
 echo "milestones='$lr_schedule_milestones' bz=$global_batch_size lr=$LR warmup=$lr_warmup_steps"
 
 
+mlc_utils_srun_disp_gpu_mem
+trap mlc_utils_sbatch_disp_gpu_mem TERM EXIT KILL
+mlc_utils_srun_dmesg_bg
 
-# Debugging (single rank, controlled by DEBUG_RANK, defaults to rank 0)
-if [ "${ENABLE_DEBUGGING:-0}" -eq 1 ]; then
-    ENROOT_ENTRYPOINT="env/enroot-entrypoint.sh"
-else
-    ENROOT_ENTRYPOINT=""
-fi
-
-srun -ul --container-workdir=$(pwd) --environment="$(realpath env/ngc-deepcam-24.03.toml)" ${ENROOT_ENTRYPOINT} bash -c " \
+set -x
+srun -ul --container-workdir=$(pwd) --environment="$(realpath env/ngc-deepcam-24.03.toml)" \
+    ${SRUN_EXTRA_ARGS:-} ${ENROOT_EXTRA_ENTRYPOINT:-} bash -c " \
        hostname
        cd src/deepCam
        python ./train.py \
@@ -114,3 +117,7 @@ srun -ul --container-workdir=$(pwd) --environment="$(realpath env/ngc-deepcam-24
        --batchnorm_group_size 1 \
        --local_batch_size ${local_batch_size}
 "
+
+set +x
+mlc_utils_srun_disp_gpu_mem
+mlc_utils_kill_dmesg_bg
