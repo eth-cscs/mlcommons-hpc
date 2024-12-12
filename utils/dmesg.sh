@@ -10,7 +10,7 @@ if [ -z "${MLPERF_UTILS_DMESG_SH_INCLUDED:-}" ]; then
 
             echo "[dmesg.sh] Launching dmesg step in the background"
             # filter for dmesg output with 
-            # grep -E '[0-9]{1,5}: \[[A-Za-z]{2} [A-Za-z]{3} [ ]?[0-9]{1,2} [0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]{4}\]'
+            # egrep '[0-9]{1,5}: \[[A-Za-z]{2} [A-Za-z]{3} [ ]?[0-9]{1,2} [0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]{4}\]'
             srun -l -K -W $((`date -d "$ENDTIME" +%s` - `date +%s`)) \
                 --ntasks-per-node=1 --ntasks="${SLURM_JOB_NUM_NODES}" \
                 dmesg -Tw --since $STARTTIME &
