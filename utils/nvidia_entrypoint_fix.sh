@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Made obsolete by replacing exclusive with default GPU compute mode
 # Chris' fix: https://cscs-lugano.slack.com/archives/C0802SGFMH8/p1732194381005259?thread_ts=1732123036.294079&cid=C0802SGFMH8
 
 host_driver=`nvidia-smi --query-gpu=driver_version --format=csv | tail -n 1 | awk -F "." '{print $1}'`

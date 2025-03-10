@@ -1,4 +1,5 @@
-FROM nvcr.io/nvidia/tensorflow:24.04-tf2-py3
+ARG BASE_IMAGE 
+FROM ${BASE_IMAGE}
 
 RUN apt-get update \
   && apt-get install -yqq --no-install-recommends openssh-server \
@@ -6,11 +7,6 @@ RUN apt-get update \
 RUN mkdir -p /run/sshd
 
 RUN python -m pip install --no-cache-dir -U pip
-
-RUN pip install --no-cache-dir pandas wandb
-
-# Install MLPerf-logging
-RUN pip install --no-cache-dir "git+https://github.com/mlcommons/logging.git"
 
 RUN pip uninstall -y horovod
 
@@ -26,13 +22,16 @@ RUN wget -q http://www.mpich.org/static/downloads/${MPICH_VER}/mpich-${MPICH_VER
     && rm -rf mpich-${MPICH_VER} \
     && rm mpich-${MPICH_VER}.tar.gz
 
-ARG HOROVOD_VERSION=0.28.1
+RUN CXX=mpic++ CC=mpicc pip install mpi4py
+
 RUN ldconfig /usr/local/cuda/targets/sbsa-linux/lib/stubs && \
-    MPI_HOME=/usr HOROVOD_GPU_OPERATIONS=NCCL HOROVOD_WITH_TENSORFLOW=1 HOROVOD_WITH_MPI=1 \
-    pip install --no-cache-dir -v git+https://github.com/horovod/horovod.git@v${HOROVOD_VERSION} && \
+    MAKEFLAGS=-j32 MPI_HOME=/usr HOROVOD_GPU_OPERATIONS=NCCL HOROVOD_WITHOUT_MXNET=1 HOROVOD_WITH_TENSORFLOW=1 HOROVOD_WITHOUT_PYTORCH=1 HOROVOD_WITH_MPI=1 \
+    pip install --no-cache-dir -v git+https://github.com/horovod/horovod.git && \
     horovodrun --check-build && \
     ldconfig
 
-# Test to avoid race condition for different ranks executing entrypoint resulting in different LD_LIBRARY_PATHs
-# if CUDA driver in container newer than on host (incompatible user-space CUDA libs being loaded/runtime NCCL test errors)
-COPY nvidia_entrypoint_fix_tmp.sh /opt/nvidia/entrypoint.d/99-gpu-compat-library-path-fix.sh
+RUN pip install --no-cache-dir pandas wandb
+
+# Install MLPerf-logging
+RUN pip install --no-cache-dir --no-deps "git+https://github.com/mlcommons/logging.git"
+    

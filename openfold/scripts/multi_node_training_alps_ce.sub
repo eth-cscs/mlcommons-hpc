@@ -20,15 +20,27 @@
 #SBATCH --time 02:15:00
 #SBATCH --nodes 16
 #SBATCH --ntasks-per-node 4
-#SBATCH --gpus-per-task 1
 #SBATCH --output logs/slurm-%x-%j.out
 
 set -euo pipefail
 
-source $SLURM_SUBMIT_DIR/../utils/all_ce.sh
+export SLURM_CPU_BIND="verbose"
 
-mlc_utils_set_enroot_library_path
-mlc_utils_set_enroot_extra_entrypoint
+if command -v nvidia-smi &> /dev/null; then
+    export SLURM_GPUS_PER_TASK=1
+    export SLURM_CPUS_PER_TASK=72
+    CE_ENV_TOML="env/ngc-openfold-24.03.toml"
+elif command -v rocm-smi &> /dev/null; then
+    export SLURM_CPUS_PER_TASK=24
+    CE_ENV_TOML="env/rocm-openfold-6.3.3-pt2.4.0.toml"
+else
+    echo "Error: No CPU-only environment available."
+fi
+
+. $SLURM_SUBMIT_DIR/../utils/all_ce.sh
+
+
+mlc_utils_set_enroot_entrypoint
 
 # Print current datetime:
 echo "START" $(date +"%Y-%m-%d %H:%M:%S")
@@ -43,12 +55,52 @@ echo "SLURM_NODELIST=$SLURM_NODELIST"
 
 # Download container and give it a name:
 srun \
---container-workdir=$(pwd) --environment="$(realpath env/ngc-openfold-24.03.toml)" \
+--container-workdir=$(pwd) --environment="$(realpath ${CE_ENV_TOML})" \
 bash -c 'echo "srun SLURM_JOB_ID=$SLURM_JOB_ID SLURMD_NODENAME=$SLURMD_NODENAME"'
 
 export BASE_DATA_DIR="/iopsstor/scratch/cscs/dealmeih/ds/mlperf/data/openfold/pdb_data"
 export TRAINING_RUN_DIR="$(pwd)"
 
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --n-epochs)
+            max_epochs=$2
+            shift 2
+            ;;
+        --n-train)
+            n_train=$2
+            shift 2
+            ;;
+        --n-valid)
+            n_valid=$2
+            shift 2
+            ;;
+        --wandb)
+            enable_wandb=1
+            shift 1
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+: ${local_batch_size:=1}
+: ${num_train_iters:=2000}
+: ${val_every_iters:=40}
+
+if [ ! -z ${max_epochs+x} ] || [ ! -z ${n_train+x} ]; then  # max_epochs or n_train is set
+    : ${max_epochs:=50}
+    : ${n_train:=$(( 40*16 ))}
+
+    echo "Using modified training data settings configured from command line."
+    set -x
+    global_batch_size=$(( ${local_batch_size} * ${SLURM_NTASKS} ))
+    val_every_iters=$(( ${n_train} / ${global_batch_size} ))
+    num_train_iters=$(( ${max_epochs} * ${val_every_iters} ))
+    set +x
+fi
 
 # Print current datetime again:
 echo "READY" $(date +"%Y-%m-%d %H:%M:%S")
@@ -71,11 +123,13 @@ mlc_utils_srun_dmesg_bg
 # Run the command:
 set -x
 srun -ul \
---container-workdir=$(pwd) --environment="$(realpath env/ngc-openfold-24.03.toml)" \
-${SRUN_EXTRA_ARGS:-} ${ENROOT_EXTRA_ENTRYPOINT:-} \
+--container-workdir=$(pwd) --environment="$(realpath ${CE_ENV_TOML})" \
+${SRUN_EXTRA_ARGS:-} ${ENROOT_ENTRYPOINT:-} \
 bash -c \
 "
 hostname
+export SLURM_NTASKS_PER_NODE=\${SLURM_TASKS_PER_NODE%%(*}
+set -x
 RANK=\$SLURM_PROCID \
 WORLD_SIZE=\$SLURM_NTASKS \
 LOCAL_RANK=\$SLURM_LOCALID \
@@ -88,15 +142,17 @@ python train.py \
 --pdb_alignments_dirpath ${BASE_DATA_DIR}/open_protein_set/processed/pdb_alignments \
 --initialize_parameters_from ${BASE_DATA_DIR}/mlperf_hpc_openfold_resumable_checkpoint.pt \
 --seed 1234567890 \
---num_train_iters 2000 \
---val_every_iters 40 \
---local_batch_size 1 \
+--num_train_iters ${num_train_iters} \
+--val_every_iters ${val_every_iters} \
+--local_batch_size ${local_batch_size} \
 --base_lr 1e-3 \
 --warmup_lr_init 1e-5 \
 --warmup_lr_iters 0 \
 --num_train_dataloader_workers 14 \
 --num_val_dataloader_workers 2 \
---distributed"
+--distributed \
+${n_valid+--n_valid ${n_valid}} \
+${enable_wandb+--wandb}"
 
 set +x
 mlc_utils_srun_disp_gpu_mem

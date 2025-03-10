@@ -33,6 +33,7 @@ class StoreDictKeyPair(ap.Action):
 def parse_arguments():
     AP = ap.ArgumentParser()
     AP.add_argument("--wireup_method", type=str, default="nccl-openmpi", choices=["dummy", "nccl-openmpi", "nccl-slurm", "nccl-slurm-pmi", "mpi"], help="Specify what is used for wiring up the ranks")
+    AP.add_argument("--wandb", action="store_true", help="Enable wandb logging.")
     AP.add_argument("--wandb_certdir", type=str, default="/opt/certs", help="Directory in which to find the certificate for wandb logging.")
     AP.add_argument("--run_tag", type=str, help="Unique run tag, to allow for better identification")
     AP.add_argument("--output_dir", type=str, help="Directory used for storing output. Needs to read/writeable from rank 0")
@@ -57,6 +58,8 @@ def parse_arguments():
     AP.add_argument("--batchnorm_group_size", type=int, default=1, help="Process group size for sync batchnorm")
     AP.add_argument("--resume_logging", action='store_true')
     AP.add_argument("--seed", default=333, type=int)
+    AP.add_argument("--n_train", type=int, help="Override number of training samples")
+    AP.add_argument("--n_valid", type=int, help="Override number of validation samples")
     pargs = AP.parse_args()
     
     return pargs

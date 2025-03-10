@@ -177,19 +177,19 @@ class TMScoreHeadConfig:
 @dataclass
 class AuxiliaryHeadsConfig:
     per_residue_lddt_ca_predictor_config: PerResidueLDDTCaPredictorConfig = field(
-        default=PerResidueLDDTCaPredictorConfig(),
+        default_factory=PerResidueLDDTCaPredictorConfig,
     )
     distogram_head_config: DistogramHeadConfig = field(
-        default=DistogramHeadConfig(),
+        default_factory=DistogramHeadConfig,
     )
     masked_msa_head_config: MaskedMSAHeadConfig = field(
-        default=MaskedMSAHeadConfig(),
+        default_factory=MaskedMSAHeadConfig,
     )
     experimentally_resolved_head_config: ExperimentallyResolvedHeadConfig = field(
-        default=ExperimentallyResolvedHeadConfig(),
+        default_factory=ExperimentallyResolvedHeadConfig,
     )
     tm_score_head_config: TMScoreHeadConfig = field(
-        default=TMScoreHeadConfig(),
+        default_factory=TMScoreHeadConfig,
     )
     tm_score_head_enabled: bool = False
 
@@ -269,28 +269,28 @@ class TMLossConfig:
 @dataclass
 class LossConfig:
     fape_loss_config: FAPELossConfig = field(
-        default=FAPELossConfig(),
+        default_factory=FAPELossConfig,
     )
     supervised_chi_loss_config: SupervisedChiLossConfig = field(
-        default=SupervisedChiLossConfig(),
+        default_factory=SupervisedChiLossConfig,
     )
     distogram_loss_config: DistogramLossConfig = field(
-        default=DistogramLossConfig(),
+        default_factory=DistogramLossConfig,
     )
     masked_msa_loss_config: MaskedMSALossConfig = field(
-        default=MaskedMSALossConfig(),
+        default_factory=MaskedMSALossConfig,
     )
     plddt_loss_config: PLDDTLossConfig = field(
-        default=PLDDTLossConfig(),
+        default_factory=PLDDTLossConfig,
     )
     experimentally_resolved_loss_config: ExperimentallyResolvedLossConfig = field(
-        default=ExperimentallyResolvedLossConfig(),
+        default_factory=ExperimentallyResolvedLossConfig,
     )
     violation_loss_config: ViolationLossConfig = field(
-        default=ViolationLossConfig(),
+        default_factory=ViolationLossConfig,
     )
     tm_loss_config: TMLossConfig = field(
-        default=TMLossConfig(),
+        default_factory=TMLossConfig,
     )
 
 
@@ -300,41 +300,41 @@ class AlphaFoldConfig:
 
     # AlphaFold modules configuration:
     input_embedder_config: InputEmbedderConfig = field(
-        default=InputEmbedderConfig(),
+        default_factory=InputEmbedderConfig,
     )
     recycling_embedder_config: RecyclingEmbedderConfig = field(
-        default=RecyclingEmbedderConfig(),
+        default_factory=RecyclingEmbedderConfig,
     )
     template_angle_embedder_config: TemplateAngleEmbedderConfig = field(
-        default=TemplateAngleEmbedderConfig(),
+        default_factory=TemplateAngleEmbedderConfig,
     )
     template_pair_embedder_config: TemplatePairEmbedderConfig = field(
-        default=TemplatePairEmbedderConfig(),
+        default_factory=TemplatePairEmbedderConfig,
     )
     template_pair_stack_config: TemplatePairStackConfig = field(
-        default=TemplatePairStackConfig(),
+        default_factory=TemplatePairStackConfig,
     )
     template_pointwise_attention_config: TemplatePointwiseAttentionConfig = field(
-        default=TemplatePointwiseAttentionConfig(),
+        default_factory=TemplatePointwiseAttentionConfig,
     )
     extra_msa_embedder_config: ExtraMSAEmbedderConfig = field(
-        default=ExtraMSAEmbedderConfig(),
+        default_factory=ExtraMSAEmbedderConfig,
     )
     extra_msa_stack_config: ExtraMSAStackConfig = field(
-        default=ExtraMSAStackConfig(),
+        default_factory=ExtraMSAStackConfig,
     )
     evoformer_stack_config: EvoformerStackConfig = field(
-        default=EvoformerStackConfig(),
+        default_factory=EvoformerStackConfig,
     )
     structure_module_config: StructureModuleConfig = field(
-        default=StructureModuleConfig(),
+        default_factory=StructureModuleConfig,
     )
     auxiliary_heads_config: AuxiliaryHeadsConfig = field(
-        default=AuxiliaryHeadsConfig(),
+        default_factory=AuxiliaryHeadsConfig,
     )
 
     # Training loss configuration:
-    loss_config: LossConfig = field(default=LossConfig())
+    loss_config: LossConfig = field(default_factory=LossConfig)
     use_clamped_fape_probability: float = 0.9
     self_distillation_plddt_threshold: float = 50.0
 

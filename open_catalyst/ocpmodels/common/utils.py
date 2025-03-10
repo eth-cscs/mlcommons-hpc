@@ -396,6 +396,16 @@ def build_config(args, args_override):
     config["world_size"] = args.num_nodes * args.num_gpus
     config["distributed_backend"] = args.distributed_backend
 
+    for i, (_, n_samples) in enumerate(zip(config["dataset"], [args.n_train, args.n_valid, args.n_test])):
+        if n_samples is not None:
+            config["dataset"][i]["n_samples"] = n_samples
+
+    if args.n_epochs is not None:
+        config["optim"]["max_epochs"] = args.n_epochs
+
+    if args.wandb:
+        config["logger"] = "wandb"
+
     return config
 
 

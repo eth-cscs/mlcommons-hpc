@@ -1,0 +1,23 @@
+ARG BASE_IMAGE 
+FROM ${BASE_IMAGE}
+
+RUN apt-get update \
+  && apt-get install -yqq --no-install-recommends openssh-server cmake gdb \
+  && rm -rf /var/lib/apt/lists/*
+RUN mkdir -p /run/sshd
+
+# PyG
+RUN FORCE_CUDA=1 TORCH_ROCM_ARCH="gfx942" pip install -vvv --no-build-isolation \
+    git+https://github.com/rusty1s/pytorch_scatter.git
+RUN FORCE_CUDA=1 TORCH_ROCM_ARCH="gfx942" pip install -vvv --no-build-isolation \
+    git+https://github.com/rusty1s/pytorch_sparse.git
+RUN FORCE_CUDA=1 TORCH_ROCM_ARCH="gfx942" pip install -vvv --no-build-isolation \
+    git+https://github.com/lukasgd/pytorch_geometric.git@1.7.2-fix
+    # torch-geometric==1.7.2 fails in BesselBasisLayer due to
+    # issue fixed in https://github.com/pyg-team/pytorch_geometric/pull/4424
+
+# MLPerf logging
+RUN pip install --no-cache-dir --no-deps git+https://github.com/mlcommons/logging.git
+
+# Other packages
+RUN pip install --no-cache-dir ray submitit demjson3 wandb ase pymatgen lmdb==1.1.1

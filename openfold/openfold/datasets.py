@@ -50,8 +50,11 @@ class PDBDataset(Dataset):
         mode: str,  # "train" or "eval"
         verbose: bool = False,
         name: str = "InitialDataset",
+        n_samples: Optional[int] = None,
     ) -> None:
         assert mode in {"train", "eval"}
+        if n_samples is not None and n_samples < len(mmcif_chains_df):
+            mmcif_chains_df = mmcif_chains_df.head(n_samples)
         self.mmcif_chains = mmcif_chains_df.to_dict("records")
         self.alignments_super_index = alignments_super_index
         self.pdb_mmcif_dicts_dirpath = pdb_mmcif_dicts_dirpath
@@ -255,6 +258,7 @@ class ValidationDataset(PDBDataset):
         use_only_pdb_chain_ids: Optional[List[str]] = None,
         verbose: bool = False,
         name: str = "ValidationDataset",
+        n_samples: Optional[int] = None,
     ) -> None:
         if verbose:
             print(f"{name}: initialization...")
@@ -321,6 +325,7 @@ class ValidationDataset(PDBDataset):
             mode="eval",
             verbose=verbose,
             name=name,
+            n_samples=n_samples,
         )
 
     @property

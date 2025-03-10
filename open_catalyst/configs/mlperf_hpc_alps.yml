@@ -71,3 +71,5 @@ optim:
 slurm:
     reservation: all_nodes
     time: "24:00:00"
+
+hide_eval_progressbar: True

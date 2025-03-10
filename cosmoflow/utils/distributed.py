@@ -27,6 +27,8 @@
 
 """Utilties for distributed processing"""
 
+import inspect
+import logging
 import horovod.tensorflow.keras as hvd
 
 
@@ -39,6 +41,9 @@ def rank():
 
 def barrier():
     try:
+        frame = inspect.currentframe().f_back
+        logging.info(f"Arrived at barrier in function: {frame.f_code.co_name}, line: {frame.f_lineno}")
         hvd.allreduce([], name='Barrier')
     except ValueError:
         pass
+    logging.info(f"Left barrier in function: {frame.f_code.co_name}, line: {frame.f_lineno}")

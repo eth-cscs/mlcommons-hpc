@@ -60,6 +60,8 @@ def configure_session(gpu=None, intra_threads=None, inter_threads=None,
 
     if gpu is not None:
         gpu_devices = tf.config.list_physical_devices('GPU')
+        for device in gpu_devices:
+            tf.config.experimental.set_memory_growth(device, True)
         if len(gpu_devices) < gpu + 1:
             raise RuntimeError(f'{socket.gethostname()}: ' +
                                f'GPU {gpu} unavailable, ' +

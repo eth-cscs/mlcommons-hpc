@@ -23,15 +23,27 @@ ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
 RUN apt-get update \
-  && apt-get install -yqq --no-install-recommends openssh-server \
+  && apt-get install -yqq --no-install-recommends openssh-server cmake gdb \
   && rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /run/sshd
+
+ENV MPICH_VER=4.2.1
+
+RUN wget -q http://www.mpich.org/static/downloads/${MPICH_VER}/mpich-${MPICH_VER}.tar.gz \
+    && tar xf mpich-${MPICH_VER}.tar.gz \
+    && cd mpich-${MPICH_VER} \
+    && ./configure --disable-fortran --with-device=ch3:sock -prefix=/usr \
+    && make -j 3 \ 
+    && make install \
+    && cd .. \
+    && rm -rf mpich-${MPICH_VER} \
+    && rm mpich-${MPICH_VER}.tar.gz
 
 # some requirements
 RUN pip install h5py
 
 #install mpi4py
-RUN pip install mpi4py==3.1.6
+RUN CXX=mpic++ CC=mpicc pip install mpi4py==3.1.6
 
 #install warmup-scheduler
 RUN pip install "git+https://github.com/ildoonet/pytorch-gradual-warmup-lr.git@6b5e8953a80aef5b324104dc0c2e9b8c34d622bd"

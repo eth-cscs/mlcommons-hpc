@@ -6,10 +6,26 @@ cd $(dirname $0)
 
 source ../../utils/podman_build.sh
 
-set -x
+if command -v nvidia-smi &> /dev/null; then
 
-podman_prepare_build_context .
-podman build -t $USER/ngc-deepcam:24.03 .
-enroot import -x mount -o $SCRATCH/images/ngc-deepcam+24.03.sqsh podman://$USER/ngc-deepcam:24.03
+    : ${BASE_IMAGE:=nvcr.io/nvidia/pytorch:24.03-py3}
+    BASE_CONTAINER_REGISTRY=$(podman_utils_container_registry $BASE_IMAGE)
+    BASE_TAG_SHORT=$(podman_utils_tag_short $BASE_IMAGE)
 
-set +x
+    set -x
+    # podman_prepare_build_context .  # no longer needed with default compute mode
+    podman_build_enroot_import ${BASE_CONTAINER_REGISTRY}-deepcam:${BASE_TAG_SHORT} -f Dockerfile --build-arg BASE_IMAGE=${BASE_IMAGE} .
+    set +x
+elif command -v rocm-smi &> /dev/null; then
+
+    : ${BASE_IMAGE:=docker.io/rocm/pytorch:rocm6.3.3_ubuntu24.04_py3.12_pytorch_release_2.4.0}
+    BASE_CONTAINER_REGISTRY=$(podman_utils_container_registry $BASE_IMAGE)
+    BASE_TAG_SHORT=$(podman_utils_tag_short $BASE_IMAGE)
+
+    set -x
+    podman_build_enroot_import ${BASE_CONTAINER_REGISTRY}-deepcam:${BASE_TAG_SHORT} -f Dockerfile-rocm --build-arg BASE_IMAGE=${BASE_IMAGE} .
+    set +x
+else
+    echo "Error: No CPU-only image available."
+    exit 1
+fi

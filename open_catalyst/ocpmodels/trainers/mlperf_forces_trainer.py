@@ -14,6 +14,7 @@ import numpy as np
 import torch
 import torch_geometric
 from tqdm import tqdm
+import warnings
 
 from ocpmodels.common import distutils
 from ocpmodels.common.data_parallel import ParallelCollater
@@ -398,7 +399,7 @@ class MLPerfForcesTrainer(BaseTrainer):
             accelerators_per_rank = self.config["task"]["mlperf_accelerators_per_rank"]
             if 'SLURM_NTASKS_PER_NODE' in os.environ:
                 if int(os.environ['SLURM_NTASKS_PER_NODE']) != accelerators_per_node//accelerators_per_rank:
-                    raise ValueError(
+                    warnings.warn(
                         f"SLURM_NTASKS_PER_NODE ({os.environ['SLURM_NTASKS_PER_NODE']}) does not match config: "
                         f"mlperf_accelerators_per_node/rank = {accelerators_per_node}/{accelerators_per_rank}")
             num_ranks = distutils.get_world_size()

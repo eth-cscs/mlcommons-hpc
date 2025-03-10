@@ -36,18 +36,6 @@ import logging
 import pickle
 from types import SimpleNamespace
 
-import os
-if os.environ.get("ENABLE_DEBUGGING", False):
-    if os.environ.get("DEBUG_RANK", '0') == os.environ.get("SLURM_PROCID"):
-        import debugpy
-        debugpy.listen(5678)
-        print("Waiting for debugger attach")
-        debugpy.wait_for_client()
-        debugpy.breakpoint()
-    else:
-        import time
-        time.sleep(1200)
-
 # External imports
 import yaml
 import pandas as pd
@@ -266,7 +254,7 @@ def main():
     # Initialize Weights & Biases logging
     if args.wandb and dist.rank == 0:
         import wandb
-        wandb.init(project='cosmoflow', name=args.run_tag, id=args.run_tag,
+        wandb.init(project='mlperf-cosmoflow', name=args.run_tag, id=args.run_tag,
                    config=config, resume=args.run_tag)
 
     # Device and session configuration

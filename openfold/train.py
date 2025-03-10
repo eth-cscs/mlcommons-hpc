@@ -24,6 +24,7 @@ from typing import List, Union
 import numpy as np
 import pandas as pd
 import torch
+import wandb
 from mlperf_common.frameworks.pyt import PyTCommunicationHandler
 from mlperf_common.logging import MLLoggerWrapper
 from mlperf_logging import mllog
@@ -163,6 +164,12 @@ def parse_args() -> argparse.Namespace:
         help="Compute validation every given iteration.",
     )
     parser.add_argument(
+        "--n_valid",
+        type=int,
+        default=None,
+        help="Override number of validation samples.",
+    )
+    parser.add_argument(
         "--keep_best_checkpoints",
         type=int,
         default=0,
@@ -264,6 +271,11 @@ def parse_args() -> argparse.Namespace:
         "--distributed",
         action="store_true",
         help="Whether to enable distributed training.",
+    )
+    parser.add_argument(
+        "--wandb",
+        action="store_true",
+        help="Enable logging to wandb.",
     )
     args = parser.parse_args()
     # saving checkpoints must coincide with validation:
@@ -613,6 +625,10 @@ def training(args: argparse.Namespace) -> None:
     is_logging_enabled = bool(args.log_every_iters > 0)
     is_main_process_and_logging = bool(is_main_process and is_logging_enabled)
 
+    if args.wandb and is_main_process:
+        wandb.init(project="mlperf-openfold", name=f"run-{os.environ.get('SLURM_JOB_ID')}", config=vars(args))
+        wandb.watch(alphafold)
+
     # Start data staging:
     mllogger.event(key="staging_start")
     staging_perf = -time.perf_counter()
@@ -665,6 +681,7 @@ def training(args: argparse.Namespace) -> None:
         filter_by_alignments=args.filter_by_alignments,
         use_only_pdb_chain_ids=args.use_only_pdb_chain_ids,
         name=f"validation_dataset_{process_name}",
+        n_samples=args.n_valid,
     )
     mllogger.event(key=mllogger.constants.EVAL_SAMPLES, value=len(validation_dataset))
 
@@ -832,6 +849,8 @@ def training(args: argparse.Namespace) -> None:
             }
             train_logs.append(train_log)
             print(f"training {train_log}")
+            if args.wandb:
+                wandb.log(train_log, step=iteration, split="train")
 
         # Save process and train logs:
         if is_logging_enabled and iteration % args.log_every_iters == 0:
@@ -906,6 +925,9 @@ def training(args: argparse.Namespace) -> None:
                 print(f"validation {val_log}")
                 val_log["metrics_list"] = val_metrics_list
                 save_logs([val_log], val_logs_outpath, append=True)
+                if args.wandb:
+                    wandb.log(val_log, step=iteration, split="val")
+
             # Check if validation reaches target accuracy:
             if is_main_process:
                 if val_avg_lddt_ca >= args.target_avg_lddt_ca_value:

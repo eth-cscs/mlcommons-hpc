@@ -141,6 +141,21 @@ class Flags:
         self.parser.add_argument(
             "--local_rank", default=0, type=int, help="Local rank"
         )
+        self.parser.add_argument(
+            "--n-train", default=None, type=int, help="Override number of training samples"
+        )
+        self.parser.add_argument(
+            "--n-valid", default=None, type=int, help="Override number of validation samples"
+        )
+        self.parser.add_argument(
+            "--n-test", default=None, type=int, help="Override number of test samples"
+        )
+        self.parser.add_argument(
+            "--n-epochs", default=None, type=int, help="Override number of epochs"
+        )
+        self.parser.add_argument(
+            "--wandb", action="store_true", help="Enable wandb logging"
+        )
 
 
 flags = Flags()

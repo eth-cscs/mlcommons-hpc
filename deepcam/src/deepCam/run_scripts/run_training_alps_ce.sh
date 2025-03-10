@@ -25,26 +25,66 @@
 #SBATCH --time=03:30:00
 #SBATCH --nodes=128
 #SBATCH --ntasks-per-node=4
-#SBATCH --gpus-per-task=1
+#SBATCH --cpus-per-task=72
 #SBATCH --output logs/slurm-%x-%j.out
 
-set -euo pipefail
+set -euo pipefail  # comment for memory debugging
 
-source $SLURM_SUBMIT_DIR/../utils/all_ce.sh
+export SLURM_CPU_BIND="verbose"
 
-mlc_utils_set_enroot_library_path
-mlc_utils_set_enroot_extra_entrypoint
+if command -v nvidia-smi &> /dev/null; then
+    export SLURM_GPUS_PER_TASK=1
+    export SLURM_CPUS_PER_TASK=72
+    CE_ENV_TOML="env/ngc-deepcam-24.03.toml"
+elif command -v rocm-smi &> /dev/null; then
+    export SLURM_CPUS_PER_TASK=24
+    CE_ENV_TOML="env/rocm-deepcam-6.3.3-pt2.4.0.toml"
+else
+    echo "Error: No CPU-only environment available."
+fi
+
+. $SLURM_SUBMIT_DIR/../utils/all_ce.sh
+
+mlc_utils_set_enroot_entrypoint
 
 mkdir -p logs
 
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --n-epochs)
+            max_epochs=$2
+            shift 2
+            ;;
+        --n-train)
+            n_train=$2
+            shift 2
+            ;;
+        --n-valid)
+            n_valid=$2
+            shift 2
+            ;;
+        --wandb)
+            enable_wandb=1
+            shift 1
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
 # parameters (can be overriden through environment)
-data_dir=${data_dir:-"/iopsstor/scratch/cscs/dealmeih/ds/mlperf/data/deepcam/All-Hist/"}
-# data_dir="/iopsstor/scratch/cscs/dealmeih/ds/mlperf/data/deepcam/deepcam-data-mini/"
+: ${max_epochs:=28}
+
+if [ $# -ge 1 ] && [ "$1" == "mini" ]; then
+    data_dir="/capstor/scratch/cscs/lukasd/ds/mlperf/data/deepcam/deepcam-data-mini/mini-1"
+else
+    data_dir=${data_dir:-"/capstor/scratch/cscs/lukasd/ds/mlperf/data/deepcam/All-Hist/"}
+fi
 output_dir=${output_dir:-"./runs/"}
-local_batch_size=${local_batch_size:-2}
+local_batch_size=${local_batch_size:-12}
 global_batch_size=$(( $local_batch_size * $SLURM_NTASKS ))
-valid_batch_size=${valid_batch_size:-2}
-max_epochs=${max_epochs:-28}
+valid_batch_size=${valid_batch_size:-12}
 seed=${seed:-$(date +%s)}
 run_tag=${run_tag:-"b$(printf '%04d' $global_batch_size)_j$SLURM_JOBID"}
 
@@ -93,10 +133,14 @@ trap mlc_utils_sbatch_disp_gpu_mem TERM EXIT KILL
 mlc_utils_srun_dmesg_bg
 
 set -x
-srun -ul --container-workdir=$(pwd) --environment="$(realpath env/ngc-deepcam-24.03.toml)" \
-    ${SRUN_EXTRA_ARGS:-} ${ENROOT_EXTRA_ENTRYPOINT:-} bash -c " \
+# for i in $(seq 1 100); do  # memory debugging
+
+srun -ul --container-workdir=$(pwd) --environment="$(realpath ${CE_ENV_TOML})" \
+    ${SRUN_EXTRA_ARGS:-} ${ENROOT_ENTRYPOINT:-} bash -c " \
        hostname
+       export SLURM_NTASKS_PER_NODE=\${SLURM_TASKS_PER_NODE%%(*}
        cd src/deepCam
+       set -x
        python ./train.py \
        --wireup_method \"nccl-slurm\" \
        --run_tag ${run_tag} \
@@ -112,11 +156,22 @@ srun -ul --container-workdir=$(pwd) --environment="$(realpath env/ngc-deepcam-24
        --logging_frequency 10 \
        --save_frequency 0 \
        --max_epochs ${max_epochs} \
-       --max_inter_threads 4 \
+       --max_inter_threads 12 \
        --seed ${seed} \
        --batchnorm_group_size 1 \
-       --local_batch_size ${local_batch_size}
-"
+       --local_batch_size ${local_batch_size} \
+       ${n_train+--n_train=${n_train}} \
+       ${n_valid+--n_valid=${n_valid}} \
+       ${enable_wandb+--wandb}
+" #&  # memory debugging
+
+#     SLURM_TRAINING_STEP_PID=$!
+#     sleep 120
+#     kill $SLURM_TRAINING_STEP_PID
+
+#     echo "Checking post-job GPU memory $i..."
+#     mlc_utils_srun_disp_gpu_mem
+# done # memory debugging
 
 set +x
 mlc_utils_srun_disp_gpu_mem

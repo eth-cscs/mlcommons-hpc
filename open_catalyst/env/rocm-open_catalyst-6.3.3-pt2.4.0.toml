@@ -1,10 +1,10 @@
-image = "/capstor/scratch/cscs/lukasd/images/ngc-openfold+24.03.sqsh"
+image = "/capstor/scratch/cscs/lukasd/images/rocm-open_catalyst+6.3.3-pt2.4.0.sqsh"
 
 mounts = [
   "/capstor/scratch/cscs",
   "/iopsstor/scratch/cscs",
   "/etc/slurm",
-  "/users/$USER/.vscode-server",
+  "/users/$USER/x86_64",
   "/users/$USER/.wget-hsts",
   "/users/$USER/.bash_history",
 ]
@@ -14,11 +14,7 @@ writable = true
 [annotations]
 #com.hooks.cxi.enabled = "true"
 com.hooks.aws_ofi_nccl.enabled = "true"
-com.hooks.aws_ofi_nccl.variant = "cuda12"
+com.hooks.aws_ofi_nccl.variant = "rocm6"
 
 [env]
-#TORCH_CPP_LOG_LEVEL = "INFO"
-#TORCH_DISTRIBUTED_DEBUG = "DETAIL"
-#TORCH_NCCL_BLOCKING_WAIT = "1"
-#NCCL_ASYNC_ERROR_HANDLING = "1"
 NCCL_DEBUG = "INFO"

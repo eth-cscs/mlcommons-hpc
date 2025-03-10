@@ -25,6 +25,7 @@ import os
 # torch
 import torch
 import torch.distributed as dist
+import wandb
 
 # custom stuff
 from utils import metric
@@ -85,6 +86,9 @@ def validate(pargs, comm_rank, comm_size,
     # print results
     logger.log_event(key = "eval_accuracy", value = iou_avg_val, metadata = {'epoch_num': epoch+1, 'step_num': step})
     logger.log_event(key = "eval_loss", value = loss_avg_val, metadata = {'epoch_num': epoch+1, 'step_num': step})
+
+    if pargs.wandb and comm_rank == 0:
+        wandb.log({"eval_loss": loss_avg_val, "eval_accuracy": iou_avg_val, "epoch": epoch, "step": step}, step=step, split="val")
 
     stop_training = False
     if (iou_avg_val >= pargs.target_iou):

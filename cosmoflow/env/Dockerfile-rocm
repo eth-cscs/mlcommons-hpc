@@ -1,0 +1,42 @@
+ARG BASE_IMAGE 
+FROM ${BASE_IMAGE}
+
+RUN apt-get update \
+  && apt-get install -yqq --no-install-recommends openssh-server cmake gdb \
+  && rm -rf /var/lib/apt/lists/*
+RUN mkdir -p /run/sshd
+
+RUN python -m pip install --no-cache-dir -U pip
+
+ENV MPICH_VER=4.2.1
+
+RUN wget -q http://www.mpich.org/static/downloads/${MPICH_VER}/mpich-${MPICH_VER}.tar.gz \
+    && tar xf mpich-${MPICH_VER}.tar.gz \
+    && cd mpich-${MPICH_VER} \
+    && ./configure --disable-fortran --with-device=ch3:sock -prefix=/usr \
+    && make -j 3 \ 
+    && make install \
+    && cd .. \
+    && rm -rf mpich-${MPICH_VER} \
+    && rm mpich-${MPICH_VER}.tar.gz
+
+RUN CXX=mpic++ CC=mpicc pip install mpi4py
+
+ENV LD_LIBRARY_PATH=/usr/local/lib/python3.10/dist-packages/tensorflow:$LD_LIBRARY_PATH
+
+RUN ldconfig /opt/rocm-6.3.3/lib && \
+    git clone --branch master --recursive https://github.com/horovod/horovod.git && \
+    cd horovod && \
+    ln -s $ROCM_PATH/lib/cmake/hip/FindHIP* cmake/Modules/ && \
+    sed -i 's/rccl\.h/rccl\/rccl\.h/' horovod/common/ops/nccl_operations.h && \
+    sed -i "s/'-DPYTHON_EXECUTABLE:FILEPATH=' + sys.executable]/'-DPYTHON_EXECUTABLE:FILEPATH=' + sys.executable, '-DAMDGPU_TARGETS=' + os.environ['AMDGPU_TARGETS'] ]/g" setup.py && \
+    MAKEFLAGS=-j32 AMDGPU_TARGETS=gfx942 HOROVOD_ROCM_PATH=$ROCM_PATH HOROVOD_ROCM_HOME=$ROCM_PATH HOROVOD_GPU=ROCM HOROVOD_GPU_BROADCAST=NCCL HOROVOD_GPU_ALLREDUCE=NCCL HOROVOD_WITHOUT_MXNET=1 HOROVOD_WITH_TENSORFLOW=1 HOROVOD_WITH_GLOO=1 HOROVOD_WITH_MPI=1 HOROVOD_WITHOUT_PYTORCH=1 \
+    pip install --no-cache-dir -v . && \
+    horovodrun --check-build && \
+    ldconfig
+
+RUN pip install --no-cache-dir pandas wandb
+
+# Install MLPerf-logging
+RUN pip install --no-cache-dir --no-deps "git+https://github.com/mlcommons/logging.git"
+    

@@ -54,6 +54,9 @@ class TrajectoryLmdbDataset(Dataset):
         self._keylen_cumulative = np.cumsum(keylens).tolist()
         self.transform = transform
         self.num_samples = sum(keylens)
+        
+        if self.config.get("n_samples", None):
+            self.num_samples = min(self.num_samples, self.config["n_samples"])
 
     def __len__(self):
         return self.num_samples

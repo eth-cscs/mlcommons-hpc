@@ -25,6 +25,7 @@ import os
 # torch
 import torch
 import torch.distributed as dist
+import wandb
 
 # custom stuff
 from utils import metric
@@ -95,6 +96,9 @@ def train_epoch(pargs, comm_rank, comm_size,
             logger.log_event(key = "train_accuracy", value = iou_avg_train, metadata = {'epoch_num': epoch+1, 'step_num': step})
             logger.log_event(key = "train_loss", value = loss_avg_train, metadata = {'epoch_num': epoch+1, 'step_num': step})
 
+            if pargs.wandb and comm_rank == 0:
+                wandb.log({"train_loss": loss_avg_train, "train_accuracy": iou_avg_train, "learning_rate": current_lr, "epoch": epoch, "step": step}, step=step, split="train")
+
     # end of epoch logging
     # allreduce for loss
     loss_avg = loss.detach()
@@ -114,5 +118,8 @@ def train_epoch(pargs, comm_rank, comm_size,
     logger.log_event(key = "learning_rate", value = current_lr, metadata = {'epoch_num': epoch+1, 'step_num': step})
     logger.log_event(key = "train_accuracy", value = iou_avg_train, metadata = {'epoch_num': epoch+1, 'step_num': step})
     logger.log_event(key = "train_loss", value = loss_avg_train, metadata = {'epoch_num': epoch+1, 'step_num': step}) 
-    
+
+    if pargs.wandb and comm_rank == 0:
+        wandb.log({"train_loss": loss_avg_train, "train_accuracy": iou_avg_train, "learning_rate": current_lr, "epoch": epoch, "step": step}, step=step, split="train")
+
     return step

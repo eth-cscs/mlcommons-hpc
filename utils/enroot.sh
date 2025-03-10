@@ -11,16 +11,12 @@ if [ -z "${MLPERF_UTILS_ENROOT_SH_INCLUDED:-}" ]; then
 
     }
 
-    function mlc_utils_set_enroot_extra_entrypoint() {
+    function mlc_utils_set_enroot_entrypoint() {
 
         # Debugging (single rank, controlled by DEBUG_RANK, defaults to rank 0)
         if [ "${ENABLE_DEBUGGING:-0}" -eq 1 ]; then
-            ENROOT_EXTRA_ENTRYPOINT="$(dirname "${BASH_SOURCE[0]}")/enroot-entrypoint.sh"
-        else
-            ENROOT_EXTRA_ENTRYPOINT=""
+            : ${ENROOT_ENTRYPOINT:="$(which enroot-entrypoint.sh 2> /dev/null || echo "$(dirname "${BASH_SOURCE[0]}")"/enroot-entrypoint.sh)"}
         fi
-        
     }
-
 
 fi

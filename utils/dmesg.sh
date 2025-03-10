@@ -16,12 +16,8 @@ if [ -z "${MLPERF_UTILS_DMESG_SH_INCLUDED:-}" ]; then
                 dmesg -Tw --since $STARTTIME &
             DMESG_PID=$!
 
-            if [[ -z "${!SRUN_EXTRA_ARGS+x}" ]]; then
-                SRUN_EXTRA_ARGS=""
-            fi
-            
             if [[ ! " ${SRUN_EXTRA_ARGS} " =~ " --overlap " ]]; then
-                SRUN_EXTRA_ARGS+=" --overlap"
+                SRUN_EXTRA_ARGS="--overlap ${SRUN_EXTRA_ARGS:-}"
             fi
         fi
 

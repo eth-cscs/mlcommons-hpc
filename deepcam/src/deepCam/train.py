@@ -33,6 +33,7 @@ import utils.mlperf_log_utils as mll
 import torch
 import torch.optim as optim
 from torch.autograd import Variable
+import wandb
 
 # Custom
 from driver import train_epoch, validate
@@ -192,6 +193,10 @@ def main(pargs):
     current_lr = pargs.start_lr if not pargs.lr_schedule else scheduler.get_last_lr()[0]
     stop_training = False
     net_train.train()
+
+    if pargs.wandb and comm_rank == 0:
+        wandb.init(project = "mlperf-deepcam", name=pargs.run_tag, config=vars(pargs))
+        wandb.watch(net_train)
 
     # start trining
     logger.log_end(key = "init_stop", sync = True)

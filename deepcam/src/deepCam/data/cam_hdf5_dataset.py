@@ -85,7 +85,8 @@ class CamDataset(Dataset):
                  shuffle = False,
                  preprocess = True,
                  transpose = True,
-                 comm_size = 1, comm_rank = 0, seed = 12345):
+                 comm_size = 1, comm_rank = 0, seed = 12345,
+                 n_samples = None):
         
         self.source = source
         self.statsfile = statsfile
@@ -97,7 +98,11 @@ class CamDataset(Dataset):
         self.comm_size = comm_size
         self.comm_rank = comm_rank
         self.allow_uneven_distribution = allow_uneven_distribution
-        
+
+        # use only a subset of the files        
+        if n_samples is not None and n_samples < len(self.all_files):
+            self.all_files = self.all_files[:n_samples]
+
         #split list of files
         self.rng = np.random.RandomState(seed)
         

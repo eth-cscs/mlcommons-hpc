@@ -1,19 +1,32 @@
 #!/bin/bash
 
-#SBATCH -J mlperf-cosmoflow
+#SBATCH --job-name mlperf-cosmoflow
+#SBATCH --time 4:00:00
 #SBATCH --nodes 4
 #SBATCH --ntasks-per-node 4
-#SBATCH --gpus-per-task 1
-#SBATCH -t 4:00:00
-#SBATCH -o logs/slurm-%x-%j.out
+#SBATCH --output logs/slurm-%x-%j.out
 
 set -euo pipefail
 
-source $SLURM_SUBMIT_DIR/../utils/all_ce.sh
+export SLURM_CPU_BIND="verbose"
 
-mlc_utils_set_enroot_library_path
-mlc_utils_set_enroot_extra_entrypoint
+if command -v nvidia-smi &> /dev/null; then
+    export SLURM_GPUS_PER_TASK=1
+    export SLURM_CPUS_PER_TASK=72
+    gpu_id=0
+    CE_ENV_TOML="env/ngc-cosmoflow-24.04.toml"
+elif command -v rocm-smi &> /dev/null; then
+    export SLURM_CPUS_PER_TASK=24
+    gpu_id="\$SLURM_LOCALID"
+    CE_ENV_TOML="env/rocm-cosmoflow-6.3.3-tf2.15.toml"
+else
+    echo "Error: No CPU-only environment available."
+fi
 
+. $SLURM_SUBMIT_DIR/../utils/all_ce.sh
+
+
+mlc_utils_set_enroot_entrypoint
 
 #export HOROVOD_TIMELINE=./timeline.json
 
@@ -26,11 +39,13 @@ trap mlc_utils_sbatch_disp_gpu_mem TERM EXIT KILL
 mlc_utils_srun_dmesg_bg
 
 set -x
-srun -l -u --mpi=pmi2 --container-workdir=$(pwd) --environment="$(realpath env/ngc-cosmoflow-24.04.toml)" \
-     ${SRUN_EXTRA_ARGS:-} ${ENROOT_EXTRA_ENTRYPOINT:-} bash -c " \
+srun -l -u --mpi=pmi2 --container-workdir=$(pwd) --environment="$(realpath ${CE_ENV_TOML})" \
+     ${SRUN_EXTRA_ARGS:-} ${ENROOT_ENTRYPOINT:-} bash -c " \
         hostname
-        python train.py --mlperf -d --gpu 0 $@
-"
+        export SLURM_NTASKS_PER_NODE=\${SLURM_TASKS_PER_NODE%%(*}
+        set -x
+        python train.py --mlperf --distributed --gpu ${gpu_id} \"\$@\"
+" _ "$@"  # --verbose --wandb for extended logging
 
 set +x
 mlc_utils_srun_disp_gpu_mem

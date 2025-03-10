@@ -26,7 +26,8 @@ def get_dataloaders(pargs, root_dir, device, seed, comm_size, comm_rank):
                            shuffle = True, 
                            preprocess = True,
                            comm_size = 1,
-                           comm_rank = 0)
+                           comm_rank = 0,
+                           n_samples = pargs.n_train)
     
     distributed_train_sampler = DistributedSampler(train_set,
                                                    num_replicas = comm_size,
@@ -51,7 +52,8 @@ def get_dataloaders(pargs, root_dir, device, seed, comm_size, comm_rank):
                                 shuffle = False,
                                 preprocess = True,
                                 comm_size = comm_size,
-                                comm_rank = comm_rank)
+                                comm_rank = comm_rank,
+                                n_samples = pargs.n_valid)
     
     # use batch size = 1 here to make sure that we do not drop a sample
     validation_loader = DataLoader(validation_set,
