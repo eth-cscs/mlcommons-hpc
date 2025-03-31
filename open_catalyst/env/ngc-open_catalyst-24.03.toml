@@ -4,9 +4,9 @@ mounts = [
   "/capstor/scratch/cscs",
   "/iopsstor/scratch/cscs",
   "/etc/slurm",
-  "/users/$USER/.vscode-server",
-  "/users/$USER/.wget-hsts",
-  "/users/$USER/.bash_history",
+  "/users/${USER}/.vscode-server",
+  "/users/${USER}/.wget-hsts",
+  "/users/${USER}/.bash_history",
 ]
 
 writable = true

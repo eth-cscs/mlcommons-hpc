@@ -4,9 +4,9 @@ mounts = [
   "/capstor/scratch/cscs",
   "/iopsstor/scratch/cscs",
   "/etc/slurm",
-  "/users/$USER/x86_64",
-  "/users/$USER/.wget-hsts",
-  "/users/$USER/.bash_history",
+  "/users/${USER}/x86_64",
+  "/users/${USER}/.wget-hsts",
+  "/users/${USER}/.bash_history",
 ]
 
 writable = true
