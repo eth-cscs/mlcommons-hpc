@@ -62,11 +62,14 @@ if [ -z "${MLPERF_UTILS_PODMAN_BUILD_SH_INCLUDED:-}" ]; then
                     base_tag_array[$((length - 2))]="pt${base_tag_array[$((length - 2))]}"
                 fi
                 echo "${base_tag_array[0]#rocm}-${base_tag_array[$((length - 2))]}-${suffix}"
-            else
-                if [[ "${suffix}" != tf* ]]; then
+            elif [[ ${length} -gt 1 ]]; then
+                if [[ "${suffix}" =~ "_pytorch_" ]]; then
                     suffix="pt${suffix}"
                 fi
+
                 echo "${base_tag_array[0]#rocm}-${suffix}"
+            else
+                echo ${suffix}
             fi
         else
             echo "Error: Unsupported container registry" >&2

@@ -8,7 +8,7 @@ source ../../utils/podman_build.sh
 
 if command -v nvidia-smi &> /dev/null; then
 
-    : ${BASE_IMAGE:=nvcr.io/nvidia/tensorflow:24.04-tf2-py3}
+    : ${BASE_IMAGE:=nvcr.io/nvidia/tensorflow:25.02-tf2-py3}
     BASE_CONTAINER_REGISTRY=$(podman_utils_container_registry $BASE_IMAGE)
     BASE_TAG_SHORT=$(podman_utils_tag_short $BASE_IMAGE)
 
