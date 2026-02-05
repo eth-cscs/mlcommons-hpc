@@ -10,11 +10,11 @@ set -euo pipefail
 
 export SLURM_CPU_BIND="verbose"
 
-if command -v nvidia-smi &> /dev/null; then
+if nvidia-smi &> /dev/null; then
     export SLURM_GPUS_PER_TASK=1
     export SLURM_CPUS_PER_TASK=72
     CE_ENV_TOML="env/ngc-open_catalyst-24.03.toml"
-elif command -v rocm-smi &> /dev/null; then
+elif rocm-smi &> /dev/null; then
     export SLURM_CPUS_PER_TASK=24
     CE_ENV_TOML="env/rocm-open_catalyst-6.3.3-pt2.4.0.toml"
 else

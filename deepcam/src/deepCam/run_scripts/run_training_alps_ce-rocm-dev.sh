@@ -142,13 +142,49 @@ mlc_utils_srun_dmesg_bg
 set -x
 # for i in $(seq 1 100); do  # memory debugging
 
+# observe open files on /tmp with: watch -n 1 "ls -al /proc/*/fd/* 2>/dev/null | grep '/tmp' | awk '{print \$9, \$10, \$11}'"
+
+
 srun -ul --container-workdir=$(pwd) --environment="$(realpath ${CE_ENV_TOML})" \
     ${SRUN_EXTRA_ARGS:-} ${ENROOT_ENTRYPOINT:-} bash -c " \
        hostname
        export SLURM_NTASKS_PER_NODE=\${SLURM_TASKS_PER_NODE%%(*}
 
+       MIOPEN_VERSION=\$(awk '/^#define MIOPEN_VERSION_(MAJOR|MINOR|PATCH) / {print \$3}' /opt/rocm/include/miopen/version.h | paste -sd.)
+       ROCM_VERSION=\$(cat /opt/rocm/.info/version)
+       export MIOPEN_CUSTOM_CACHE_DIR=/tmp/.cache/miopen\$MIOPEN_VERSION-rocm\$ROCM_VERSION-\$SLURM_JOB_ID-\$SLURM_PROCID
+       export MIOPEN_USER_DB_PATH=\$MIOPEN_CUSTOM_CACHE_DIR
+
+       set -x
+
+       export PYTORCH_TUNABLEOP_VEROBSE=1
+
+       export MIOPEN_ENABLE_LOGGING=1
+       export MIOPEN_ENABLE_LOGGING_CMD=1
+       export MIOPEN_ENABLE_LOGGING_MPMT=1
+       export MIOPEN_LOG_LEVEL=7
+       export MIOPEN_ENABLE_LOGGING_ELAPSED_TIME=1
+       export MIOPEN_CHECK_NUMERICS=1
+       export MIOPEN_COMPILE_PARALLEL_LEVEL=\$((\$(nproc)/4))
+
+       echo \${MIOPEN_DEBUG_GCN_ASM_KERNELS:-}
+       echo \${MIOPEN_INIT_PREFER_GEMM:-}
+       echo \${MIOPEN_FIND_MODE:-}
+       echo \${MIOPEN_DEBUG_CONV_IMPLICIT_GEMM:-}
+
+    #    # Further options
+    ##    export MIOPEN_DEBUG_FORBID_SOLVERS=ConvHipImplicitGemmGroupFwdXdlops
+    #    export MIOPEN_DEBUG_CONV_FFT=0
+    #    export MIOPEN_DEBUG_CONV_DIRECT=0
+    #    export MIOPEN_DEBUG_CONV_GEMM=0
+    #    export MIOPEN_DEBUG_CONV_WINOGRAD=0
+    #    export MIOPEN_DEBUG_CONV_IMPLICIT_GEMM=0
+
+       mkdir -p \$MIOPEN_CUSTOM_CACHE_DIR
+
        cd src/deepCam
        set -x
+       #strace \
        python ./train.py \
        --wireup_method \"nccl-slurm\" \
        --run_tag ${run_tag} \

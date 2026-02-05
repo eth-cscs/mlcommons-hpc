@@ -20,6 +20,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import os
+import subprocess
 import torch
 import torch.distributed as dist
 
@@ -98,7 +99,12 @@ def init(method, batchnorm_group_size=1):
     elif method == "nccl-slurm":
         rank = int(os.getenv("SLURM_PROCID"))
         world_size = int(os.getenv("SLURM_NTASKS"))
-        address = os.getenv("SLURM_LAUNCH_NODE_IPADDR")
+        address = subprocess.run(
+            ["scontrol", "show", "hostnames", os.environ.get("SLURM_JOB_NODELIST")],
+            capture_output=True,
+            text=True,
+            check=True
+        ).stdout.splitlines()[0]        
         port = "29500"
         os.environ["MASTER_ADDR"] = address
         os.environ["MASTER_PORT"] = port

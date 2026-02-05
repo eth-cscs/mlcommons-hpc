@@ -10,12 +10,12 @@ set -euo pipefail
 
 export SLURM_CPU_BIND="verbose"
 
-if command -v nvidia-smi &> /dev/null; then
+if nvidia-smi &> /dev/null; then
     export SLURM_GPUS_PER_TASK=1
     export SLURM_CPUS_PER_TASK=72
     gpu_id=0
     CE_ENV_TOML="env/ngc-cosmoflow-24.04.toml"
-elif command -v rocm-smi &> /dev/null; then
+elif rocm-smi &> /dev/null; then
     export SLURM_CPUS_PER_TASK=24
     gpu_id="\$SLURM_LOCALID"
     CE_ENV_TOML="env/rocm-cosmoflow-6.3.3-tf2.15.toml"

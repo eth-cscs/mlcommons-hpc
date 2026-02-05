@@ -18,7 +18,7 @@ FROM ${BASE_IMAGE}
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
-  && apt-get install -yqq --no-install-recommends openssh-server \
+  && apt-get install -yqq --no-install-recommends strace valgrind htop nvtop atop ioping fio tree \
   && rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /run/sshd
 

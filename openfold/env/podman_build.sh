@@ -6,7 +6,7 @@ cd $(dirname $0)
 
 source ../../utils/podman_build.sh
 
-if command -v nvidia-smi &> /dev/null; then
+if nvidia-smi &> /dev/null; then
 
     : ${BASE_IMAGE:=nvcr.io/nvidia/pytorch:24.03-py3}
     BASE_CONTAINER_REGISTRY=$(podman_utils_container_registry $BASE_IMAGE)
@@ -17,9 +17,11 @@ if command -v nvidia-smi &> /dev/null; then
     podman_build_enroot_import ${BASE_CONTAINER_REGISTRY}-openfold:${BASE_TAG_SHORT} -f Dockerfile --build-arg BASE_IMAGE=${BASE_IMAGE} .
     set +x
 
-elif command -v rocm-smi &> /dev/null; then
+elif rocm-smi &> /dev/null; then
 
-    : ${BASE_IMAGE:=docker.io/rocm/pytorch:rocm6.3.3_ubuntu24.04_py3.12_pytorch_release_2.4.0}
+    # : ${BASE_IMAGE:=docker.io/rocm/pytorch:rocm7.1.1_ubuntu24.04_py3.12_pytorch_release_2.9.1}
+    : ${BASE_IMAGE:=docker.io/rocm/pytorch:rocm6.4.4_ubuntu24.04_py3.12_pytorch_release_2.7.1}
+    # : ${BASE_IMAGE:=docker.io/rocm/pytorch:rocm6.3.3_ubuntu24.04_py3.12_pytorch_release_2.4.0}
     BASE_CONTAINER_REGISTRY=$(podman_utils_container_registry $BASE_IMAGE)
     BASE_TAG_SHORT=$(podman_utils_tag_short $BASE_IMAGE)
 

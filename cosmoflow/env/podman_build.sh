@@ -6,7 +6,7 @@ cd $(dirname $0)
 
 source ../../utils/podman_build.sh
 
-if command -v nvidia-smi &> /dev/null; then
+if nvidia-smi &> /dev/null; then
 
     : ${BASE_IMAGE:=nvcr.io/nvidia/tensorflow:25.02-tf2-py3}
     BASE_CONTAINER_REGISTRY=$(podman_utils_container_registry $BASE_IMAGE)
@@ -18,9 +18,11 @@ if command -v nvidia-smi &> /dev/null; then
     #podman_build_enroot_import ${BASE_CONTAINER_REGISTRY}-cosmoflow:${BASE_TAG_SHORT}-libfabric -f Dockerfile-libfabric --build-arg BASE_IMAGE=${BASE_IMAGE} .
     set +x
 
-elif command -v rocm-smi &> /dev/null; then
+elif rocm-smi &> /dev/null; then
 
-    : ${BASE_IMAGE:=docker.io/rocm/tensorflow:rocm6.3.3-py3.10-tf2.15-dev}
+    # : ${BASE_IMAGE:=docker.io/rocm/tensorflow:rocm7.1.1-py3.12-tf2.20-dev}
+    : ${BASE_IMAGE:=docker.io/rocm/tensorflow:rocm6.4.2-py3.12-tf2.16-dev}
+    # : ${BASE_IMAGE:=docker.io/rocm/tensorflow:rocm6.3.3-py3.10-tf2.15-dev}
     # : ${BASE_IMAGE:=docker.io/rocm/tensorflow:rocm6.3.3-py3.12-tf2.16-dev}
     # : ${BASE_IMAGE:=docker.io/rocm/tensorflow:rocm6.3.3-py3.12-tf2.17-dev}
 

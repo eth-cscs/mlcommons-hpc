@@ -1,0 +1,21 @@
+image = "/capstor/scratch/cscs/lukasd/images/rocm-deepcam+6.4.4-2.7.1.sqsh"
+
+mounts = [
+  "/capstor/scratch/cscs",
+  "/iopsstor/scratch/cscs",
+  "/tmp",
+  "/users/${USER}/.cache"
+]
+
+writable = true
+
+[annotations]
+#com.hooks.cxi.enabled = "true"
+com.hooks.aws_ofi_nccl.enabled = "true"
+com.hooks.aws_ofi_nccl.variant = "rocm6"
+
+#com.hooks.ssh.enabled = "true"
+#com.hooks.ssh.authorize_ssh_key = "/users/lukasd/.ssh/cscs-key.pub"
+
+[env]
+NCCL_DEBUG = "INFO"

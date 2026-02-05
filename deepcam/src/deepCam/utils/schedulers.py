@@ -14,7 +14,7 @@ class MultiStepLRWarmup(_LRScheduler):
         self.warmup_slope = 1./float(self.warmup_steps) if self.warmup_steps > 0 else 1.
         self.milestones = Counter([x + self.warmup_steps + 1 for x in milestones])
         self.gamma = gamma
-        super(MultiStepLRWarmup, self).__init__(optimizer, last_epoch, verbose)
+        super(MultiStepLRWarmup, self).__init__(optimizer, last_epoch) #, verbose)
 
     @torch.jit.export
     def get_lr(self):
