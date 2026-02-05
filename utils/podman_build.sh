@@ -33,15 +33,20 @@ if [ -z "${MLPERF_UTILS_PODMAN_BUILD_SH_INCLUDED:-}" ]; then
         IFS='/' read -r -a base_image_array <<< ${image%:*}
 
         local length=${#base_image_array[@]}
-        local container_registry=${base_image_array[$((length - 2))]}
-
-        if [ "${container_registry}" = "nvidia" ]; then
-            echo "ngc"
-        elif [ "${container_registry}" = "rocm" ]; then
-            echo "rocm"
+        
+        if [ "${length}" -eq 2 ]; then
+            echo "${base_image_array[0]}"
         else
-            echo "Error: Unsupported container registry" >&2
-            exit 1
+            local container_registry="${base_image_array[$((length - 2))]}"
+            
+            if [ "${container_registry}" = "nvidia" ]; then
+                echo "ngc"
+            elif [ "${container_registry}" = "rocm" ]; then
+                echo "rocm"
+            else
+                echo "Error: Unsupported container registry" >&2
+                exit 1
+            fi
         fi
     }
 

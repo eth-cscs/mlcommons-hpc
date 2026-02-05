@@ -23,7 +23,7 @@ ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
 RUN apt-get update \
-  && apt-get install -yqq --no-install-recommends strace valgrind htop nvtop atop ioping fio tree \
+  && apt-get install -yqq --no-install-recommends strace valgrind htop nvtop atop ioping fio tree openssh-server \
   && rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /run/sshd
 
@@ -31,7 +31,7 @@ RUN mkdir -p /run/sshd
 RUN pip install h5py
 
 #install mpi4py
-RUN pip install mpi4py==3.1.6
+RUN pip install mpi4py
 
 #install warmup-scheduler
 RUN pip install "git+https://github.com/ildoonet/pytorch-gradual-warmup-lr.git@6b5e8953a80aef5b324104dc0c2e9b8c34d622bd"
